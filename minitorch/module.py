@@ -31,14 +31,18 @@ class Module:
 
     def train(self) -> None:
         """Set the mode of this module and all descendent modules to `train`."""
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
+        self.training = True # set self to true
+        # recursively set descendents to true
+        for module in self.modules():
+            module.train()
 
     def eval(self) -> None:
         """Set the mode of this module and all descendent modules to `eval`."""
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
-
+        self.training = False # set self = false
+        # recursively set descendents to false
+        for module in self.modules():
+            module.eval()
+        
     def named_parameters(self) -> Sequence[Tuple[str, Parameter]]:
         """Collect all the parameters of this module and its descendents.
 
@@ -47,13 +51,25 @@ class Module:
             The name and `Parameter` of each ancestor parameter.
 
         """
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
+        # start with empty list
+        sequence = []
+        
+        # add this module's parameters (pass it as a tuple)
+        for name, param in self._parameters.items():
+            sequence.append((name, param))
+        
+        # recursively add descendent modules
+        for module_name, module in self._modules.items(): # loop through each child module
+            for param_name, param in module.named_parameters(): # recursively call named_paramters() for each child module
+                sequence.append((f"{module_name}.{param_name}", param)) # manually make param_name and add it w/ param to our list; using prefixing to differentiate more easily
+            
+        return sequence
 
     def parameters(self) -> Sequence[Parameter]:
         """Enumerate over all the parameters of this module and its descendents."""
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
+        # call named parameters to get all parameters who have names
+            # returns a tuple so just focus on the second return value -- param
+        return [param for _, param in self.named_parameters()]
 
     def add_parameter(self, k: str, v: Any) -> Parameter:
         """Manually add a parameter. Useful helper for scalar parameters.

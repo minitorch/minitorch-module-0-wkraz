@@ -23,6 +23,7 @@ from minitorch.operators import (
     relu,
     relu_back,
     sigmoid,
+    is_close,
 )
 
 from .strategies import assert_close, small_floats
@@ -98,6 +99,7 @@ def test_eq(a: float) -> None:
 # mathematical rules.
 
 
+
 @pytest.mark.task0_2
 @given(small_floats)
 def test_sigmoid(a: float) -> None:
@@ -107,41 +109,45 @@ def test_sigmoid(a: float) -> None:
     * It crosses 0 at 0.5
     * It is  strictly increasing.
     """
-    # TODO: Implement for Task 0.2.
-    raise NotImplementedError("Need to implement for Task 0.2")
-
+    assert sigmoid(a) >= 0.0 and sigmoid(a) <= 1.0
+    assert is_close(1 - sigmoid(a), sigmoid(-a))
+    assert sigmoid(0) == 0.5
+    if a <= 0.999:
+        assert (sigmoid(a) < sigmoid(a + 0.001))
 
 @pytest.mark.task0_2
 @given(small_floats, small_floats, small_floats)
 def test_transitive(a: float, b: float, c: float) -> None:
     """Test the transitive property of less-than (a < b and b < c implies a < c)"""
-    # TODO: Implement for Task 0.2.
-    raise NotImplementedError("Need to implement for Task 0.2")
-
+    if lt(a, b) and lt(b, c):
+        assert lt(a, c)
 
 @pytest.mark.task0_2
-def test_symmetric() -> None:
+@given(small_floats, small_floats)
+def test_symmetric(x: float, y: float) -> None:
     """Write a test that ensures that :func:`minitorch.operators.mul` is symmetric, i.e.
     gives the same value regardless of the order of its input.
     """
-    # TODO: Implement for Task 0.2.
-    raise NotImplementedError("Need to implement for Task 0.2")
-
+    assert mul(x, y) == mul(y, x)
 
 @pytest.mark.task0_2
-def test_distribute() -> None:
-    r"""Write a test that ensures that your operators distribute, i.e.
+@given(small_floats, small_floats, small_floats)
+def test_distribute(x: float, y: float, z: float) -> None:
+    """Write a test that ensures that your operators distribute, i.e.
     :math:`z \times (x + y) = z \times x + z \times y`
     """
-    # TODO: Implement for Task 0.2.
-    raise NotImplementedError("Need to implement for Task 0.2")
-
+    assert is_close(mul(add(x, y), z), add(mul(x, z), mul(y, z)))
 
 @pytest.mark.task0_2
-def test_other() -> None:
-    """Write a test that ensures some other property holds for your functions."""
-    # TODO: Implement for Task 0.2.
-    raise NotImplementedError("Need to implement for Task 0.2")
+@given(small_floats, small_floats)
+def test_other(x: float, d: float) -> None:
+    """Test the derivative of ReLU function with respect to x."""
+    if x > 0:
+        # For x > 0, the derivative of ReLU is 1, so relu_back(x, d) should return d.
+        assert relu_back(x, d) == d
+    else:
+        # For x <= 0, the derivative of ReLU is 0, so relu_back(x, d) should return 0.
+        assert relu_back(x, d) == 0
 
 
 # ## Task 0.3  - Higher-order functions
@@ -168,14 +174,21 @@ def test_sum_distribute(ls1: List[float], ls2: List[float]) -> None:
     """Write a test that ensures that the sum of `ls1` plus the sum of `ls2`
     is the same as the sum of each element of `ls1` plus each element of `ls2`.
     """
-    # TODO: Implement for Task 0.3.
-    raise NotImplementedError("Need to implement for Task 0.3")
+    sum1 = sum(ls1) + sum(ls2)
+    sum2 = sum(addLists(ls1, ls2))
+    
+    assert_close(sum1, sum2)
 
 
 @pytest.mark.task0_3
 @given(lists(small_floats))
 def test_sum(ls: List[float]) -> None:
-    assert_close(sum(ls), minitorch.operators.sum(ls))
+    if not ls:
+        # Handle the case where the list is empty
+        assert minitorch.operators.sum(ls) == 0
+    else:
+        # Compare Python's built-in sum with custom sum implementation
+        assert is_close(sum(ls), minitorch.operators.sum(ls))
 
 
 @pytest.mark.task0_3
